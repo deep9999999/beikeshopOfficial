@@ -45,17 +45,22 @@
               <h5 class="checkout-title">{{ __('shop/checkout.payment_method') }}</h5>
               <div class="radio-line-wrap" id="payment-methods-wrap">
                 @foreach ($payment_methods as $payment)
-                  <div class="radio-line-item {{ $payment['code'] == $current['payment_method_code'] ? 'active' : '' }}"
-                       data-key="payment_method_code" data-value="{{ $payment['code'] }}">
-                    <div class="left">
-                      <span class="radio"></span>
-                      <img src="{{ $payment['icon'] }}" class="img-fluid" alt="{{ $payment['name'] }}">
+                  @if ($payment['code'] == $current['payment_method_code'])
+                    <div class="refactoring-radio-line-item active d-flex flex-row align-items-center justify-content-between" data-key="payment_method_code" data-value="{{ $payment['code'] }}">
+                      <div class="left">
+                        <span class="radio"></span>
+                        <img src="{{ $payment['icon'] }}" class="img-fluid" alt="{{ $payment['name'] }}">
+                      </div>
+                      <div class="right ms-2 d-flex flex-row">
+                        <div class="title">{{ $payment['name'] }}</div>
+                        <div class="chevron"><i class="bi bi-chevron-right"></i></div>
+                      </div>
+                      
                     </div>
-                    <div class="right ms-2">
-                      <div class="title">{{ $payment['name'] }}</div>
-                    </div>
-                  </div>
+                    @break
+                  @endif
                 @endforeach
+                
               </div>
             </div>
 
@@ -168,17 +173,24 @@
         </div>
       </div>
     </div>
+    
   </div>
 
   @hook('checkout.footer')
 @endsection
 
 @push('add-scripts')
+
   <script>
     $(document).ready(function () {
-      $(document).on('click', '.radio-line-item', function (event) {
-        if ($(this).hasClass('active')) return;
-        updateCheckout($(this).data('key'), $(this).data('value'))
+      $(document).on('click', '.refactoring-radio-line-item', function (event) {
+
+        const methods = @json($payment_methods ?? []);
+        const currentCode = @json($current['payment_method_code'] ?? '');
+        checkoutAddressApp.$refs['choiceofpayment-dialog'].open(methods, currentCode, onchangePay);
+        return;
+        // if ($(this).hasClass('active')) return;
+        // updateCheckout($(this).data('key'), $(this).data('value'))
       });
 
       $('#submit-checkout').click(function (event) {
@@ -216,6 +228,11 @@
         bk.openLogin();
       });
     });
+
+    const onchangePay = (payment) => {
+      if (!payment) return;
+      updateCheckout('payment_method_code', payment['code'])
+    }
 
     const updateCheckout = (key, value, callback) => {
       $http.put('/checkout', {[key]: value}).then((res) => {
@@ -264,14 +281,15 @@
       let html = '';
 
       data.forEach((item) => {
-        html += `<div class="radio-line-item d-flex align-items-center ${payment_method_code == item.code ? 'active' : ''}" data-key="payment_method_code" data-value="${item.code}">
+        if (item.code != payment_method_code) return
+        html += `<div class="refactoring-radio-line-item d-flex align-items-center justify-content-between ${payment_method_code == item.code ? 'active' : ''}" data-key="payment_method_code" data-value="${item.code}">
         <div class="left">
-          <span class="radio"></span>
           <img src="${item.icon}" class="img-fluid" alt="${item.name}">
         </div>
         <div class="right ms-2">
           <div class="title">${item.name}</div>
         </div>
+        <div class="chevron"><i class="bi bi-chevron-right"></i></div>
       </div>`;
       })
 

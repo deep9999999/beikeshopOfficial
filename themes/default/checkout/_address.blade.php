@@ -155,10 +155,12 @@
   </div>
 
   <address-dialog ref="address-dialog" @change="onAddressDialogChange"></address-dialog>
+  <choiceofpayment-dialog v-cloak ref="choiceofpayment-dialog" @change="onPaymentChange"></choiceofpayment-dialog>
 </div>
 
 @push('add-scripts')
 @include('shared.address-form')
+@include('shared.choiceofpayment-form')
 <script>
   var checkoutAddressApp = new Vue({
     el: '#checkout-address-app',
@@ -304,6 +306,10 @@
           this.isAllAddress = false
           this.isAllAddressPayment = false
         })
+      },
+
+      onPaymentChange(payment) {
+        console.log("选择了支付方式", payment)
       },
 
       @hook('checkout._address.vue.methods')
