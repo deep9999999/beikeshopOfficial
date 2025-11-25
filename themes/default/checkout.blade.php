@@ -182,12 +182,17 @@
 @push('add-scripts')
 
   <script>
+    let _currentCode = '';
     $(document).ready(function () {
       $(document).on('click', '.refactoring-radio-line-item', function (event) {
 
         const methods = @json($payment_methods ?? []);
         const currentCode = @json($current['payment_method_code'] ?? '');
-        checkoutAddressApp.$refs['choiceofpayment-dialog'].open(methods, currentCode, onchangePay);
+        if (_currentCode == '') {
+          _currentCode = currentCode
+        }
+        
+        checkoutAddressApp.$refs['choiceofpayment-dialog'].open(methods, _currentCode, onchangePay);
         return;
         // if ($(this).hasClass('active')) return;
         // updateCheckout($(this).data('key'), $(this).data('value'))
@@ -231,6 +236,7 @@
 
     const onchangePay = (payment) => {
       if (!payment) return;
+      _currentCode = payment['code']
       updateCheckout('payment_method_code', payment['code'])
     }
 
@@ -250,6 +256,7 @@
           callback(res)
         }
       })
+      
     }
 
     const updateTotal = (totals) => {
@@ -282,14 +289,15 @@
 
       data.forEach((item) => {
         if (item.code != payment_method_code) return
-        html += `<div class="refactoring-radio-line-item d-flex align-items-center justify-content-between ${payment_method_code == item.code ? 'active' : ''}" data-key="payment_method_code" data-value="${item.code}">
+        html += `<div class="refactoring-radio-line-item d-flex flex-row align-items-center justify-content-between ${payment_method_code == item.code ? 'active' : ''}" data-key="payment_method_code" data-value="${item.code}">
         <div class="left">
           <img src="${item.icon}" class="img-fluid" alt="${item.name}">
         </div>
-        <div class="right ms-2">
+        <div class="right ms-2 d-flex flex-row">
           <div class="title">${item.name}</div>
+          <div class="chevron"><i class="bi bi-chevron-right"></i></div>
         </div>
-        <div class="chevron"><i class="bi bi-chevron-right"></i></div>
+        
       </div>`;
       })
 
